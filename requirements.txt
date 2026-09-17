@@ -1,0 +1,21 @@
+# Runtime dependencies for the server (docker image installs ONLY these).
+# Dev/CLI/test-only packages live in requirements-dev.txt.
+
+# Core
+patchright>=1.58
+playwright-stealth>=2.0.2
+
+# API
+fastapi>=0.115
+uvicorn>=0.32
+# Required by FastAPI to parse multipart/form-data — POST /v1/images/edits
+# takes image[]/mask as form fields. Without it FastAPI raises at import time
+# on any File()/Form() route.
+python-multipart>=0.0.9
+# Image inspection + format conversion: validates uploads, and converts the
+# scraped PNG to output_format=jpeg/webp with output_compression.
+pillow>=10.0
+
+# Data & Config
+pydantic>=2.5
+python-dotenv>=1.0

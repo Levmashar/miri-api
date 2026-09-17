@@ -1,0 +1,85 @@
+# ── miri-api — Docker Compose ───────────────────────────────
+# Runs the full application with headed Chrome inside Docker.
+# Uses Xvfb (virtual display) + noVNC (browser-based VNC) for login.
+#
+# Usage:
+#   docker compose up -d --build          # Build + start
+#   docker compose up -d                  # Apply .env changes (no rebuild)
+#   docker compose logs -f miri-api   # Watch logs
+#   docker logs -f miri-api           # Same, via container name
+#   docker compose down                   # Stop (keeps your login)
+#
+# Ports:
+#   http://localhost:8000  — FastAPI API (OpenAI-compatible)
+#   http://localhost:6080  — noVNC web UI (for login / debugging)
+
+# Pin the project name. Without this, Compose derives it from the directory
+# name — so renaming the folder would silently change the volume name below
+# and orphan the logged-in browser session.
+name: miri-api
+
+services:
+  miri-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: miri-api
+    container_name: miri-api
+    restart: unless-stopped
+
+    ports:
+      - "${API_PORT:-8000}:${API_PORT:-8000}"   # FastAPI API
+      - "6080:6080"                             # noVNC web UI
+
+    volumes:
+      # Persistent browser session — survives container restarts.
+      # Full volume name is <project>_browser_data = miri-api_browser_data.
+      - browser_data:/app/browser_data
+      # Logs accessible from host
+      - ./docker-logs:/app/logs
+      # Generated images accessible from host (response_format="url" files land here).
+      # Files here are auto-deleted after IMAGE_RETENTION_MINUTES.
+      - ./downloads:/app/downloads
+
+    # ── User settings come from .env ──────────────────────────────
+    # Edit .env to change API_TOKEN, VNC_PASSWORD, PROVIDER, PROXY_SERVER,
+    # timeouts, LOG_LEVEL, etc. Then apply with:  docker compose up -d
+    env_file:
+      - .env
+
+    # ── Container-specific overrides ──────────────────────────────
+    # These MUST hold these values inside Docker and intentionally
+    # override anything set in .env (environment beats env_file).
+    environment:
+      # Paths are container paths — the .env values (./browser_data)
+      # are host paths and would break the volume mounts.
+      - BROWSER_DATA_DIR=/app/browser_data
+      - LOG_DIR=/app/logs
+      - IMAGES_DIR=/app/downloads/images
+
+      # Chrome runs headed on the Xvfb virtual display. Headless mode
+      # trips ChatGPT's bot detection, so it is pinned off here.
+      - HEADLESS=false
+      - DISPLAY=:99
+      - DISPLAY_WIDTH=1366
+      - DISPLAY_HEIGHT=768
+      - DISPLAY_DEPTH=24
+
+      # Must bind to all interfaces for the port mapping to work.
+      - API_HOST=0.0.0.0
+
+    # Chromium needs these for sandbox
+    security_opt:
+      - seccomp=unconfined
+    shm_size: "2gb"
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${API_PORT:-8000}/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+volumes:
+  browser_data:
+    driver: local

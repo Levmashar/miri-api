@@ -1,0 +1,52 @@
+# ── Browser Profiles (contain cookies, login sessions) ──
+browser_data/
+browser_data_claude/
+chrome-profile/
+
+# ── Logs ──
+logs/
+docker-logs/
+
+# ── Downloads (test assets, generated images) ──
+downloads/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# ── Virtual Environment ──
+.venv/
+venv/
+env/
+
+# ── Environment Variables (contains tokens) ──
+.env
+
+# ── Sensitive Data ──
+cookies.json
+*.pem
+*.key
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Nix ──
+result
+
+
+.claude

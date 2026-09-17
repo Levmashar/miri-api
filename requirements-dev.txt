@@ -1,0 +1,20 @@
+# Dev / CLI / test-only dependencies — NOT installed in the Docker image and
+# NOT imported by the running server (`python -m src.api.server`). They are only
+# needed for the local TUI (src/cli) and the OpenAI/LangChain test scripts under
+# scripts/. Install with:  pip install -r requirements-dev.txt
+-r requirements.txt
+
+# Host metrics for the admin panel's CPU/RAM bars when running the server
+# OUTSIDE Docker (Windows/macOS). In the container src/core/resources.py reads
+# the cgroup and /proc directly, so the image needs no extra package.
+psutil>=5.9
+
+# TUI
+textual>=0.85
+typer>=0.12
+rich>=13.0
+
+# OpenAI-compatible client, for the test scripts in scripts/
+openai>=1.0
+langchain-openai>=0.1
+langchain>=0.2
